@@ -1,0 +1,9 @@
+[manage_node]
+192.168.56.110 ansible_user=cristine ansible_ssh_private_key_file=/home/cristine/.ssh/id_rsa
+
+[control_node]
+192.168.56.111 ansible_user=cristine ansible_ssh_private_key_file=/home/cristine/.ssh/id_rsa
+
+[all:children]
+manage_node
+control_node

@@ -1,0 +1,39 @@
+- name: Setup Certificate Authority (CA) and SSL on Control Node
+  hosts: control_node
+  gather_facts: no
+  become: yes  # Run tasks as sudo
+  tasks:
+    - name: Install OpenSSL
+      apt:
+        name: openssl
+        state: present
+
+    - name: Create CA directory structure
+      file:
+        path: /etc/ssl/myCA
+        state: directory
+        mode: '0755'
+
+    - name: Generate CA Private Key
+      shell: openssl genrsa -out /etc/ssl/myCA/ca.key 4096
+
+    - name: Generate CA Certificate
+      shell: >
+        openssl req -x509 -new -nodes -key /etc/ssl/myCA/ca.key
+        -sha256 -days 365 -out /etc/ssl/myCA/ca.crt
+        -subj "/C=US/ST=State/L=City/O=MyOrg/OU=IT/CN=myCA"
+
+    - name: Generate Server Private Key
+      shell: openssl genrsa -out /etc/ssl/myCA/server.key 2048
+
+    - name: Generate Certificate Signing Request (CSR)
+      shell: >
+        openssl req -new -key /etc/ssl/myCA/server.key
+        -out /etc/ssl/myCA/server.csr
+        -subj "/C=US/ST=State/L=City/O=MyOrg/OU=IT/CN=server"
+
+    - name: Sign Server Certificate with CA
+      shell: >
+        openssl x509 -req -in /etc/ssl/myCA/server.csr
+        -CA /etc/ssl/myCA/ca.crt -CAkey /etc/ssl/myCA/ca.key
+        -CAcreateserial -out /etc/ssl/myCA/server.crt -days 365 -sha256
